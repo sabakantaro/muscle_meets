@@ -20,7 +20,7 @@ const AttendButton:React.FC<Props> = ({ openAttendModal, disabled }) => {
         <Button
           color='primary'
           variant='contained'
-          onClick={() => openAttendModal(false)}
+          onClick={() => openAttendModal(true)}
           disabled={disabled}
         >
           Attend

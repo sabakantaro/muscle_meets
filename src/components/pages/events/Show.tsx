@@ -24,7 +24,7 @@ import CardActions from "@mui/material/CardActions";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import EventsFavoritesButton from "./EventsFavoritesButton";
+// import EventsFavoritesButton from "./EventsFavoritesButton";
 import Stack from "@mui/material/Stack";
 import List from "@mui/material/List";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -169,9 +169,9 @@ const EventShow = () => {
                   src={event?.imageUrl}
                   alt='event image'
                 />
-                <EventsFavoritesButton
+                {/* <EventsFavoritesButton
                   event={event!}
-                />
+                /> */}
                 <div style={{ padding: 24 }}>
                   <CardHeader
                     sx={{ p: 0 }}
@@ -361,11 +361,9 @@ const EventShow = () => {
           </Grid>
         </Container>
       </Box>
-      {event?.userId !== currentUser?.id && (
+      {event?.user?.uid !== currentUser?.uid && (
         <AttendButton
-          openAttendModal={(e) => setOpen(e)}
-          disabled={event?.participate?.userId === currentUser?.id}
-        />
+          openAttendModal={(e) => setOpen(e)} disabled={false} />
       )}
       <Dialog
         open={open}

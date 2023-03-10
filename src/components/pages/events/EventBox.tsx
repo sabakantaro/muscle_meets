@@ -13,7 +13,7 @@ import CardHeader from "@mui/material/CardHeader";
 import Avatar from "@mui/material/Avatar";
 import IconButton from "@mui/material/IconButton";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import EventsFavoritesButton from "./EventsFavoritesButton";
+// import EventsFavoritesButton from "./EventsFavoritesButton";
 import { AuthContext } from "App";
 import {Event} from "interfaces/index"
 
@@ -44,9 +44,9 @@ const EventBox: React.FC<Props> = ({ event }) => {
             src={event?.imageUrl}
             alt='Event image'
           />
-          {currentUser && (
+          {/* {currentUser && (
             <EventsFavoritesButton event={event} />
-          )}
+          )} */}
           <CardHeader
             avatar={
               <Avatar
