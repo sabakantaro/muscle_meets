@@ -1,25 +1,28 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getEvent } from "../../../lib/api/gotoreAPI";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import EventBox from "./EventBox";
 import { Event } from "interfaces";
+import { db } from '../../../firebase'
 
 export default function EventThanks() {
   const [event, setEvent] = useState<Event>();
-  const params = useParams();
+  const {id} = useParams();
   const navigate = useNavigate();
 
   const handleGetEvent = useCallback(async () => {
     try {
-      const res = await getEvent(params.id);
-      setEvent(res.data.event);
+      // @ts-ignore
+      await db.collection('events').doc(id).get().then((doc) => {
+        // @ts-ignore
+        setEvent(doc.data());
+      })
     } catch (err) {
       console.log(err);
     }
-  }, [params]);
+  }, [id]);
 
   useEffect(() => {
     handleGetEvent();
@@ -49,7 +52,7 @@ export default function EventThanks() {
         <Button
           color='primary'
           variant='contained'
-          onClick={() => navigate(`/chatroom/${event?.userId}`)}
+          onClick={() => navigate(`/chatroom/${event?.user?.uid}`)}
           fullWidth
           sx={{ justifyContent: "center", mt: 4, mb: 0 }}
         >
