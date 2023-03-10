@@ -43,6 +43,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { AuthContext } from "App"
 import {Comment, Event} from 'interfaces/index'
 import { db } from '../../../firebase'
+import { serverTimestamp } from 'firebase/firestore'
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -73,8 +74,22 @@ const EventShow = () => {
       await db.collection('events').doc(id).get().then((doc) => {
         // @ts-ignore
         setEvent(doc.data());
-        console.log(doc.data());
       })
+    } catch (err) {
+      console.log(err);
+    }
+  }, [id]);
+
+  const handleGetComments = useCallback(async () => {
+    try {
+      let data: any = []
+      const querySnapshot: any = await db.collection('comments').where('eventId', '==', id).orderBy('createdAt','desc').get();
+      querySnapshot.forEach((doc: any) => {
+        // setComments(res.data());
+        data.push(doc.data())
+    });
+      setComments(data);
+      // console.log(query);
     } catch (err) {
       console.log(err);
     }
@@ -82,51 +97,61 @@ const EventShow = () => {
 
   useEffect(() => {
     handleGetEvent();
-  }, [handleGetEvent]);
+    handleGetComments();
+  }, [handleGetEvent, handleGetComments]);
 
   const handleCreateParticipate = useCallback(async () => {
-    const data = {
-      userId: Number(currentUser?.id),
-      eventId: Number(event?.id),
-    };
     try {
-      await createParticipate(data);
-      navigate(`/events/${event?.id}/thanks`);
+      const data = {
+        user: {
+          uid: currentUser?.uid,
+          displayName: currentUser?.displayName,
+          photoURL: currentUser?.photoURL,
+        },
+        eventId: id,
+        createdAt: serverTimestamp(),
+      };
+      db.collection('participations').doc().set(data);
+      navigate(`/events/${id}/thanks`)
     } catch (err) {
       console.log(err);
     }
-  }, [currentUser, navigate, event]);
+  }, [currentUser, id, navigate]);
 
   const handleCreateComment = useCallback(async () => {
-    const data = {
-      userId: Number(currentUser?.id),
-      eventId: Number(event?.id),
-      content: String(content),
-    };
     try {
+      const collection = db.collection('comments')
+      const docId = collection.doc().id
+      const data = {
+        id: docId,
+        user: {
+          uid: currentUser?.uid,
+          displayName: currentUser?.displayName,
+          photoURL: currentUser?.photoURL,
+        },
+        eventId: id,
+        content: String(content),
+        createdAt: serverTimestamp(),
+      };
       // @ts-ignore
-      const res = await createComment(Number(event?.id), data);
-      if (res) {
-        setContent("");
-        handleGetEvent();
-      }
+      await collection.doc(docId).set({...data});
+      setContent("");
+      handleGetComments();
     } catch (err) {
       console.log(err);
     }
-  }, [currentUser, event, content, handleGetEvent]);
+  }, [currentUser, id, content, handleGetComments]);
 
   const handleDeleteComment = useCallback(
-    async (commentId: number) => {
+    async (commentId: string) => {
       try {
-        const res = await deleteComment(Number(event?.id), commentId);
-        if (res) {
-          handleGetEvent();
-        }
+        await db.collection('comments').doc(commentId).delete()
+        handleGetComments();
       } catch (err) {
         console.log(err);
       }
     },
-    [event, handleGetEvent]
+    [handleGetComments]
   );
 
   return (
@@ -325,7 +350,7 @@ const EventShow = () => {
                             <IconButton aria-label='delete' size='small'>
                               <DeleteIcon
                                 fontSize='small'
-                                onClick={() => handleDeleteComment(Number(comment?.id))}
+                                onClick={() => handleDeleteComment(String(comment?.id))}
                               />
                             </IconButton>
                           </Stack>
