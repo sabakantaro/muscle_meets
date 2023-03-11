@@ -129,6 +129,7 @@ export interface Evaluate {
 }
 
 export interface ChatRoom {
+  id: any
   chatRoom: {
     id: number
   }

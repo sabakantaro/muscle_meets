@@ -87,7 +87,7 @@ const EventShow = () => {
       querySnapshot.forEach((doc: any) => {
         // setComments(res.data());
         data.push(doc.data())
-    });
+      });
       setComments(data);
       // console.log(query);
     } catch (err) {
