@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useContext } from "react";
 import { Link } from "react-router-dom";
 import { Grid, Typography } from "@mui/material";
 import Avatar from "@mui/material/Avatar";
@@ -7,38 +7,42 @@ import ListItem from "@mui/material/ListItem";
 import Divider from "@mui/material/Divider";
 import ListItemText from "@mui/material/ListItemText";
 import ListItemAvatar from "@mui/material/ListItemAvatar";
-import { getChatRooms } from "../../../lib/api/gotoreAPI";
 import { ChatRoom } from "interfaces/index"
 import { db } from '../../../firebase'
-import { useCollectionData } from "react-firebase-hooks/firestore";
+import { AuthContext } from "App";
+import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, where } from 'firebase/firestore';
 
 const ChatRooms: React.FC = () => {
-  // const [loading, setLoading] = useState(true);
-  // const [chatRooms, setChatRooms] = useState([]);
-  //@ts-ignore
-  const [chatRooms, loading, error] = useCollectionData(db.collection("chat_rooms"));
+  const { currentUser } = useContext(AuthContext)
+  const [loading, setLoading] = useState(false);
+  const [chatRooms, setChatRooms] = useState([]);
+//   const chatRooms = [
+//     { id: 'GuMq0gkaB7q89LIkqgdQ', title: ' Dogs ' },
+//     // { id: 'food', title: ' Food ' },
+//     // { id: 'general', title: ' General ' },
+//     // { id: 'news', title: ' News ' },
+//     // { id: 'music', title: ' Music ' },
+//     // { id: 'sports', title: ' Sports ' },
+// ];
 
+  const handleGetChatRooms = useCallback(async () => {
+    try {
+      let data: any = []
+      const querySnapshot: any = await db.collection('chat_rooms').where('userIds', 'array-contains', currentUser?.uid).get();
+      querySnapshot.forEach((doc: any) => {
+        console.log(doc.data())
+        data.push(doc.data())
+      });
+      setChatRooms(data);
+    } catch (err) {
+      console.log(err);
+    }
+    setLoading(false);
+  },[currentUser])
 
-  // const handleGetChatRooms = useCallback(async () => {
-  //   try {
-  //     // const res = await getChatRooms();
-  //     // if (res.status === 200) {
-  //     //   setChatRooms(res.data.chatRooms);
-  //     // }
-  //     const chatRooms = await db.collection('chat_rooms').doc().get()
-  //     //@ts-ignore
-  //     setChatRooms(chatRooms)
-  //     console.log(chatRooms)
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-
-  //   setLoading(false);
-  // },[])
-
-  // useEffect(() => {
-  //   handleGetChatRooms();
-  // }, [handleGetChatRooms]);
+  useEffect(() => {
+    handleGetChatRooms();
+  }, [handleGetChatRooms]);
 
   return (
     <>
@@ -46,11 +50,12 @@ const ChatRooms: React.FC = () => {
         chatRooms?.length! > 0 ? (
           // @ts-ignore
           chatRooms?.map((chatRoom: ChatRoom, index: number) => {
+
             return (
               <Grid container key={index} sx={{ justifyContent: "center" }}>
                 <List>
                   <Link
-                    to={`/chatroom/${chatRoom?.chatRoom?.id}`}
+                    to={`/chatroom/${chatRoom?.id}`}
                     style={{
                       textDecoration: "none",
                       color: "inherit",
@@ -67,27 +72,29 @@ const ChatRooms: React.FC = () => {
                         <ListItemAvatar>
                           <Avatar
                             alt='avatar'
-                            src={chatRoom.otherUser?.image.url}
+                            // @ts-ignore
+                            src={chatRoom?.user?.photoURL}
                           />
                         </ListItemAvatar>
                         <ListItemText
-                          primary={chatRoom.otherUser?.name}
-                          secondary={
-                            <div style={{ marginTop: "0.5rem" }}>
-                              <Typography
-                                component='span'
-                                variant='body2'
-                                color='textSecondary'
-                              >
-                                {chatRoom.lastMessage === null
-                                  ? "No messages"
-                                  : chatRoom.lastMessage.content.length > 30
-                                  ? chatRoom.lastMessage.content.substr(0, 30) +
-                                    "..."
-                                  : chatRoom.lastMessage.content}
-                              </Typography>
-                            </div>
-                          }
+                            // @ts-ignore
+                            primary={chatRoom?.user?.displayName}
+                          // secondary={
+                          //   <div style={{ marginTop: "0.5rem" }}>
+                          //     <Typography
+                          //       component='span'
+                          //       variant='body2'
+                          //       color='textSecondary'
+                          //     >
+                          //       {chatRoom?.lastMessage === null
+                          //         ? "No messages"
+                          //         : chatRoom?.lastMessage?.content?.length > 30
+                          //         ? chatRoom?.lastMessage?.content?.substr(0, 30) +
+                          //           "..."
+                          //         : chatRoom?.lastMessage?.content}
+                          //     </Typography>
+                          //   </div>
+                          // }
                         />
                       </ListItem>
                     </div>

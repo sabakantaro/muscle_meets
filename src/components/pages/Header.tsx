@@ -105,13 +105,13 @@ const Header: React.FC = () => {
                     <NotificationsIcon />
                   </Badge>
                 </Button> */}
-                {/* <Button
+                <Button
                   color='inherit'
                   component={RouterLink}
                   to={`/chatrooms`}
                 >
                   <ChatBubbleIcon />
-                </Button> */}
+                </Button>
                 <Button
                   color='inherit'
                   component={RouterLink}
@@ -251,7 +251,7 @@ const Header: React.FC = () => {
                   }}
                 />
               </ListItemButton> */}
-              {/* <ListItemButton
+              <ListItemButton
                 color='inherit'
                 component={RouterLink}
                 to={`/chatrooms`}
@@ -266,7 +266,7 @@ const Header: React.FC = () => {
                     marginLeft: 2,
                   }}
                 />
-              </ListItemButton> */}
+              </ListItemButton>
               <ListItemButton
                 color='inherit'
                 component={RouterLink}

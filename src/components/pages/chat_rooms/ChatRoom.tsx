@@ -10,64 +10,70 @@ import SendIcon from "@mui/icons-material/Send";
 import { User, Message } from "interfaces/index"
 import { AuthContext } from "App"
 import { db } from "../../../firebase";
-import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, where } from 'firebase/firestore';
 
 
 const ChatRoom: React.FC = () => {
   const { currentUser } = useContext(AuthContext)
   const {id} = useParams<string>();
-  const [loading, setLoading] = useState<boolean>(true)
+  const [loading, setLoading] = useState<boolean>(false)
   const [otherUser, setOtherUser] = useState<User>()
   const [messages, setMeesages] = useState<Message[]>([])
   const [content, setContent] = useState<string>("")
 
-  const handleGetChatRoom = useCallback(async (callback:any) => {
+  const handleGetChatRoom = useCallback(async () => {
+    setLoading(true)
     return onSnapshot(
       query(
           //@ts-ignore
           collection(db, 'chat_rooms', id, 'messages'),
-          orderBy('timestamp', 'asc')
+          orderBy('createdAt', 'asc')
       ),
       (querySnapshot: any) => {
           const messages = querySnapshot.docs.map((x: any) => ({
               id: x.id,
               ...x.data(),
           }));
-          callback(messages);
-      }
+          setMeesages(messages);
+          setLoading(false)
+        }
   );
   }, [id]);
 
+  const handleGetOtherUser = useCallback(async () => {
+    return onSnapshot(
+      query(
+          //@ts-ignore
+          collection(db, 'chat_rooms', id, 'users'),
+          where("uid", "!=", currentUser?.uid),
+          ),
+      (querySnapshot: any) => {
+          const otherUser = querySnapshot.docs.map((x: any) => ({
+              ...x.data(),
+          }))[0];
+          setOtherUser(otherUser);
+        }
+  );
+  }, [currentUser?.uid, id]);
+
   useEffect(() => {
-    handleGetChatRoom({});
-  }, [handleGetChatRoom, id]);
+    handleGetChatRoom();
+    handleGetOtherUser();
+  }, [handleGetChatRoom, handleGetOtherUser]);
 
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     try {
       //@ts-ignore
       await addDoc(collection(db, 'chat_rooms', id, 'messages'), {
-          uid: currentUser?.uid,
-          displayName: currentUser?.displayName,
+          userId: currentUser?.uid,
           content: content,
           createdAt: serverTimestamp(),
       });
+      setContent('');
     } catch (error) {
         console.error(error);
     }
-  };
-
-  const iso8601ToDateTime = (iso8601: string | undefined) => {
-    const date = new Date(Date.parse(iso8601!));
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const hour = date.getHours();
-    const minute = date.getMinutes();
-
-    return (
-      year + "年" + month + "月" + day + "日" + hour + "時" + minute + "分"
-    );
   };
 
   return (
@@ -94,7 +100,7 @@ const ChatRoom: React.FC = () => {
               <Grid item>
                 <Avatar
                   alt='avatar'
-                  src={otherUser?.image.url || ""}
+                  src={otherUser?.photoURL || ""}
                   sx={{
                     width: 60,
                     height: 60,
@@ -111,7 +117,7 @@ const ChatRoom: React.FC = () => {
                     textAlign: "center",
                   }}
                 >
-                  {otherUser?.name}
+                  {otherUser?.displayName}
                 </Typography>
               </Grid>
             </Grid>
@@ -122,7 +128,7 @@ const ChatRoom: React.FC = () => {
                   container
                   sx={{
                     justifyContent:
-                      message.userId === otherUser?.id
+                      message?.userId === otherUser?.uid
                         ? "flex-start"
                         : "flex-end",
                   }}
@@ -130,20 +136,20 @@ const ChatRoom: React.FC = () => {
                   <Grid item>
                     <Box
                       borderRadius={
-                        message.userId === otherUser?.id
+                        message?.userId === otherUser?.uid
                           ? "30px 30px 30px 0px"
                           : "30px 30px 0px 30px"
                       }
                       bgcolor={
-                        message.userId === otherUser?.id ? "#d3d3d3" : "#666666"
+                        message?.userId === otherUser?.uid ? "#d3d3d3" : "#666666"
                       }
                       color={
-                        message.userId === otherUser?.id ? "#333333" : "#ffffff"
+                        message?.userId === otherUser?.uid ? "#333333" : "#ffffff"
                       }
                       sx={{ p: 1, m: 1 }}
                     >
                       <Typography variant='body1' component='p'>
-                        {message.content}
+                        {message?.content}
                       </Typography>
                     </Box>
                     <Typography
@@ -152,10 +158,10 @@ const ChatRoom: React.FC = () => {
                       color='textSecondary'
                       sx={{
                         textAlign:
-                          message.userId === otherUser?.id ? "left" : "right",
+                          message?.userId === otherUser?.uid ? "left" : "right",
                       }}
                     >
-                      {iso8601ToDateTime(message.createdAt?.toString())}
+                      {'2023/03/29'}
                     </Typography>
                   </Grid>
                 </Grid>
